@@ -1,7 +1,11 @@
+"use client"
 import react, { useEffect, useState } from "react";
 import './app.css'
+import Cookies from "js-cookie";
 
 export default function SsoAuth({client_id,client_secret}){
+  client_id = "9c738268c0f768bb4c83ad121d26dcf26cdac287aa66126e09e145830c5397c4rootsso"
+  client_secret ="ba43cfffd9ec9aeef7e81e5d3241bf3540da04467310b089594afdf6272e34ef"
   return(
     
   <>
@@ -17,14 +21,13 @@ export default function SsoAuth({client_id,client_secret}){
 function SsoLoginButton({client_id,client_secret}){
   const [logged , setlogged] = useState(false);
   const [message , setMessage] = useState("")
+  const url = window.location.origin + window.location.pathname;
    useEffect(()=>{
-  
     const params = new URLSearchParams(window.location.search);
     const value = params.get("code");
-    if(value){  
-      localStorage.removeItem("auth_token")
-      localStorage.setItem("auth_token",value);
-      gettoken("http://localhost:3000/testing",client_id,client_secret,'http://localhost:3000');
+    if(value && !Cookies.get("refreshToken")){ 
+      Cookies.set("authcode",value,{expires:1})
+      gettoken(url,client_id,client_secret,url);
     }
     else{
       setMessage("")
@@ -32,8 +35,15 @@ function SsoLoginButton({client_id,client_secret}){
 
     
    },[])
-function getAuthcode(base_uri,client_id,state){
-
+   const generateRandomNumber = () => {
+    const min = 10000; // minimum 5-digit number
+    const max = 99999; // maximum 5-digit number
+    const newRandomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return newRandomNumber;
+  };
+function getAuthcode(base_uri,client_id){
+   const state = generateRandomNumber();
+   Cookies.set("state",state)
     const params = {
       response_type: 'code',
       client_id:client_id,
@@ -44,38 +54,38 @@ function getAuthcode(base_uri,client_id,state){
     
 window.location.href = `http://localhost:3001?${new URLSearchParams(params)}`
 }
-async function gettoken(base_uri,client_id,client_secret,redirect_uri){
+async function gettoken(base_uri,client_id,redirect_uri){
     setMessage("proccessing")
-    if(!localStorage.getItem("auth_token")){
+    if(!Cookies.get('authcode')){
        setMessage("auth failed")
        return ;
     }
-    const access_code = localStorage.getItem("auth_token");
+    const access_code = Cookies.get("authcode");
+    const state = Cookies.get("state")
     try{
-      const payload = {
-        grant_type:"authorization_code",
+    
       
-        redirect_uri:base_uri,
-        client_id:client_id,
-        client_secret:client_secret
-      }
-      const response =  await fetch("http://localhost:8080/api/access_token",{
+      const response =  await fetch("http://localhost:8080/api/v1/access_token",{
       method:"POST",
       mode:"cors",
       cache:'reload',
-      
+      credentials: 'include',
        headers:{
+        'Content-Type': 'application/json',
         Authorization:`bearer ${access_code}`
        },
-       body:JSON.stringify(payload)
+       body:JSON.stringify({
+        grant_type:"authorization_code",
+        redirect_uri:base_uri,
+        client_id:client_id,
+        client_secret:client_secret,
+       })
       })
       if(response.ok){
         const data = await response.json();
         if(data.success){
-        localStorage.removeItem("access_token")
-        localStorage.removeItem("refresh_token")
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem("refresh_token" , data.refresh_token);
+          Cookies.remove("state")
+        Cookies.remove("authcode")
         setMessage("")
         setlogged(true);
         }
@@ -97,7 +107,7 @@ async function gettoken(base_uri,client_id,client_secret,redirect_uri){
   <>
   <div className="container">
      { !logged ?<button className="googleButton" onClick={()=>{
-        getAuthcode("http://localhost:3000/testing",client_id,2324123)
+        getAuthcode(url,client_id)
       }}>Login with Google</button>: <h4>logged in</h4> } 
       
       <div>
