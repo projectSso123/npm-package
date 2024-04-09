@@ -4,8 +4,7 @@ import './app.css'
 import Cookies from "js-cookie";
 
 export default function SsoAuth({client_id,client_secret}){
-  client_id = "9c738268c0f768bb4c83ad121d26dcf26cdac287aa66126e09e145830c5397c4rootsso"
-  client_secret ="ba43cfffd9ec9aeef7e81e5d3241bf3540da04467310b089594afdf6272e34ef"
+
   return(
     
   <>
@@ -47,8 +46,8 @@ function getAuthcode(base_uri,client_id){
     const params = {
       response_type: 'code',
       client_id:client_id,
-      redirect_uri: base_uri,
-      scope:base_uri,
+      redirect_uri:base_uri,
+      scope:"READ-WRITE",
       state:state,
     }
     
