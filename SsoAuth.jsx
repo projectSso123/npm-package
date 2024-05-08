@@ -20,7 +20,7 @@ export default function SsoAuth({client_id,client_secret}){
 function SsoLoginButton({client_id,client_secret}){
   const [logged , setlogged] = useState(false);
   const [message , setMessage] = useState("")
-  const url = window.location.origin + window.location.pathname;
+  const url = window.location.href;
    useEffect(()=>{
     const params = new URLSearchParams(window.location.search);
     const value = params.get("code");
@@ -34,6 +34,7 @@ function SsoLoginButton({client_id,client_secret}){
 
     
    },[])
+   
    const generateRandomNumber = () => {
     const min = 10000; // minimum 5-digit number
     const max = 99999; // maximum 5-digit number
@@ -60,6 +61,7 @@ async function gettoken(base_uri,client_id,redirect_uri){
        return ;
     }
     const access_code = Cookies.get("authcode");
+    console.log(access_code)
     const state = Cookies.get("state")
     try{
     
@@ -75,7 +77,7 @@ async function gettoken(base_uri,client_id,redirect_uri){
        },
        body:JSON.stringify({
         grant_type:"authorization_code",
-        redirect_uri:base_uri,
+        redirect_uri:url,
         client_id:client_id,
         client_secret:client_secret,
        })
@@ -107,7 +109,7 @@ async function gettoken(base_uri,client_id,redirect_uri){
   <div className="container">
      { !logged ?<button className="googleButton" onClick={()=>{
         getAuthcode(url,client_id)
-      }}>Login with Google</button>: <h4>logged in</h4> } 
+      }}>Login</button>: <h4>logged in</h4> } 
       
       <div>
       <h3>
