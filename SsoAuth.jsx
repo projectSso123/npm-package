@@ -21,7 +21,9 @@ function SsoLoginButton({client_id,client_secret}){
   const [logged , setlogged] = useState(false);
   const [message , setMessage] = useState("")
   const url = window.location.href;
+
    useEffect(()=>{
+  
     const params = new URLSearchParams(window.location.search);
     const value = params.get("code");
     if(value && !Cookies.get("refreshToken")){ 
@@ -47,12 +49,12 @@ function getAuthcode(base_uri,client_id){
     const params = {
       response_type: 'code',
       client_id:client_id,
-      redirect_uri:base_uri,
+      redirect_uri:window.location.href,
       scope:"READ-WRITE",
       state:state,
     }
     
-window.location.href = `http://localhost:3001?${new URLSearchParams(params)}`
+window.location.href = `http://localhost:3000?${new URLSearchParams(params)}`
 }
 async function gettoken(base_uri,client_id,redirect_uri){
     setMessage("proccessing")
@@ -77,7 +79,7 @@ async function gettoken(base_uri,client_id,redirect_uri){
        },
        body:JSON.stringify({
         grant_type:"authorization_code",
-        redirect_uri:url,
+        redirect_uri:window.location.href,
         client_id:client_id,
         client_secret:client_secret,
        })
