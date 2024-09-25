@@ -36,6 +36,7 @@ function SsoLoginButton({client_id,client_secret}){
 
     
    },[])
+
    
    const generateRandomNumber = () => {
     const min = 10000; // minimum 5-digit number
